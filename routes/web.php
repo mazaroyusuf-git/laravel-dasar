@@ -66,3 +66,58 @@ Route::get("/hello-world", function () {
 //saat live, kita bisa gunakan command php artisan view:cache dan unutk menghapus
 //php artisan view:clear
 
+//kita bisa memasukkan data ke parameter yang ada pada url dengan menggunakan {data}
+//nanti data yang ada di paramater url tersebut kita kirimkan datanya lewat closure
+//atau callback function nya
+
+//kita bisa menambahkan nama para Routing yang kita buat agar memudahkan kita
+//ketika kita ingin mendapatkan info routing tersebut
+
+Route::get("/products/{id}", function ($productId) {
+    return "Products : " . $productId;
+})->name("product.detail");
+//{id} dan $productId saling terhubung
+
+Route::get("/products/{products}/items/{item}", function ($productId, $itemId) {
+    return "Products : " . $productId . ", Items : " . $itemId;
+})->name("product.item.detail");
+//{products} terhubung dengan $productId dan {item} terhubung dengan $itemId
+
+//setelah pembuatan Routing kita bisa menambahkan ->where(param, [regex])
+//yang berguna untuk memspesify data dari parameter nya harus apa
+Route::get("/categories/{id}", function (string $categoryId) {
+    return "Categories : " . $categoryId;
+})->where("id", "[0-9]+")->name("category.detail");
+//artinya id cuma bisa integer
+
+//kita bisa membuat parameter optional dengan menambahkan tanda ? sesudah paramnya
+//namun kita perlu menambahkan default value pada parameter closure nya
+Route::get("/users/{id?}", function (string $userId = "404") {
+    return "Users : " . $userId;
+})->name("user.detail");
+
+//begini cara mengambil info Routing, kita cukup gunakan name nya saja
+//dengan method route
+Route::get("/produk/{id}", function ($id) {
+    $link = route("product.detail", [
+        "id" => $id
+    ]);
+    return "Link : " . $link;
+});
+
+Route::get("/produk-redirect/{id}", function ($id) {
+    return redirect()->route("product.detail", [
+        "id" => $id
+    ]);
+});
+
+//untuk menggunakan logic yang ada di controller kita bisa langsung menggunakan
+//path nya lalu diikuti dengan nama function nya
+Route::get("/controller/hello/request", 
+    [\App\Http\Controllers\HelloController::class, "request"]);
+    
+Route::get("/controller/hello/{name}", 
+    [\App\Http\Controllers\HelloController::class, "hello"]);
+
+
+
