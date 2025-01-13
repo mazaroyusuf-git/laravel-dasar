@@ -145,14 +145,21 @@ Route::get("/response/hello", [\App\Http\Controllers\ResponseController::class, 
 
 Route::get("/response/header", [\App\Http\Controllers\ResponseController::class, "header"]);
 
-Route::get("/response/type/view", [\App\Http\Controllers\ResponseController::class, "responseView"]);
-Route::get("/response/type/json", [\App\Http\Controllers\ResponseController::class, "responseJson"]);
-Route::get("/response/type/file", [\App\Http\Controllers\ResponseController::class, "responseFile"]);
-Route::get("/response/type/download", [\App\Http\Controllers\ResponseController::class, "responseDownload"]);
+//kita bisa melakukan Route grouping dengan prefix path yang awalan nya sama, kita bisa menggunakan
+//Rout::prefix(prefixnya)->group(closure dengan path2 nya)
+Route::prefix("/response/type")->group(function () {
+    Route::get("/view", [\App\Http\Controllers\ResponseController::class, "responseView"]);
+    Route::get("/json", [\App\Http\Controllers\ResponseController::class, "responseJson"]);
+    Route::get("/file", [\App\Http\Controllers\ResponseController::class, "responseFile"]);
+    Route::get("/download", [\App\Http\Controllers\ResponseController::class, "responseDownload"]);
+});
 
-Route::get("/cookie/set", [\App\Http\Controllers\CookieController::class, "createCookie"]);
-Route::get("/cookie/get", [\App\Http\Controllers\CookieController::class, "getCookie"]);
-Route::get("/cookie/clear", [\App\Http\Controllers\CookieController::class, "clearCookie"]);
+//kita juga bisa grouping route dengan controller yang sama kita bisa gunakan method controller(pathController::class)->group(closure)
+Route::controller(\App\Http\Controllers\CookieController::class)->group(function () {
+    Route::get("/cookie/set", "createCookie");
+    Route::get("/cookie/get", "getCookie");
+    Route::get("/cookie/clear", "clearCookie");
+});
 
 Route::get("/redirect/from", [\App\Http\Controllers\RedirectController::class, "redirectFrom"]);
 Route::get("/redirect/to", [\App\Http\Controllers\RedirectController::class, "redirectTo"]);
@@ -160,19 +167,54 @@ Route::get("/redirect/to", [\App\Http\Controllers\RedirectController::class, "re
 Route::get("/redirect/name", [\App\Http\Controllers\RedirectController::class, "redirectName"]);
 Route::get("/redirect/name/{name}", [\App\Http\Controllers\RedirectController::class, "redirectHello"])->name("redirect-hello");
 
+//UrlGenerator juga bisa digunakan untuk membuat link menuju named routes, kita bisa gunakan method route(name, param)
+//atau URL::route(name, param) atau url()->route(name, param)
+Route::get("/url/named", function () {
+    return route("redirect-hello", ["name" => "yusuf"]);
+});
+
 Route::get("/redirect/action", [\App\Http\Controllers\RedirectController::class, "redirectAction"]);
 
 Route::get("/redirect/away", [\App\Http\Controllers\RedirectController::class, "redirectAway"]);
 
-//disini kita untuk pakai middleware gunakan method middleware([arrayPathMiddleware/pakai alias]) 
+//disini kita untuk pakai middleware gunakan method middleware([arrayPathMiddleware/pakai alias]), dan kita bisa melakukan
+//grouping url dengan middleware yang sama, kita bisa gunakan method middleware([aliasMiddleware:param...])->group(closurePath)
+Route::middleware(["sample:MYG,401"])->group(function () {
+    Route::get("/middleware/param", function () {
+        return "PARAM";
+    });
+});
+
 Route::get("/middleware/api", function () {
     return "OK";
 })->middleware(["contoh"]);
 
-Route::get("/middleware/group", function () {
-    return "GROUP";
-})->middleware(["myg"]);
+//kita juga bisa melakukan grouping dengan misal nya middleware,prefix,controller,dll cukup gunakan method->method->method
+Route::middleware(["myg"])->prefix("/middleware")->group(function () {
+    Route::get("/group", function () {
+        return "GROUP";
+    });
+});
 
-Route::get("/middleware/param", function () {
-    return "PARAM";
-})->middleware(["sample:MYG,401"]);
+//kadang kita mau mengakses url saat ini, namun object Request tidak ada, kita bisa gunakan class
+//Illuminate\Routing\UrlGenerator method url() atau kita bisa gunakan Facades \illuminate\Support\Facades\URL
+//current() untuk mendapatkan url saat ini tanpa param atau full() url lengkap dengan param
+Route::get("/url/current", function () {
+    //return url()->current();
+    return \Illuminate\Support\Facades\URL::full();
+});
+
+//UrlGeneration juga bisa berguna untuk membuat link menuju controller action, laravel otomatis akan mencari path
+//yang sesuai dengan controller action tersebut, kita bisa menggunakan method action(controllerAction, Param) atau
+//URL::action(controllerAction, Param) atau url()->action(controllerAction, Param)
+Route::get("/url/action", function () {
+    return action([\App\Http\Controllers\FormController::class, "form"], []);
+});
+
+Route::get("/form", [\App\Http\Controllers\FormController::class, "form"]);
+Route::post("/form", [\App\Http\Controllers\FormController::class, "submitForm"]);
+
+
+
+
+
