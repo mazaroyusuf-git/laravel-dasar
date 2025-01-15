@@ -214,6 +214,50 @@ Route::get("/url/action", function () {
 Route::get("/form", [\App\Http\Controllers\FormController::class, "form"]);
 Route::post("/form", [\App\Http\Controllers\FormController::class, "submitForm"]);
 
+Route::get("/session/create", [\App\Http\Controllers\SessionController::class, "createSession"]);
+Route::get("/session/get", [\App\Http\Controllers\SessionController::class, "getSession"]);
+
+//Secara default laravel akan membuatkan Error handling otomatis di class App\Exceptions\Handler, gunanya untuk
+//menangkap exception dan merender nya ke user. Error Handler membaca konfigurasi di config/app.php bagian Application Debug Mode
+//jika nilai nya false maka stack trace error yang di keluarkan hanya yang sederhana saja, ketika true error yang dikeluarkan
+//bisa secara detail, direkomendasikan nilai nya false pada saat tahap production
+Route::get("/error/sampel", function () {
+    throw new Exception("Sample Error");
+});
+
+//kadang kita tidak ingin menampilkan error pada web saat terjadi exception, biasa nya kita bisa lakukan try catch.
+//laravel mendukung fitur melakukan manual report exception, ketika melakukan report manual Error Reporter akan dieksekusi
+//tanpa harus menampilkan halaman error, kita bisa lakukan ini dengan method report($exception)
+Route::get("/error/manual", function () {
+    report(new Exception("Sample Error"));
+    return "OK";
+});
+
+Route::get("/error/validation", function () {
+    throw new \App\Exceptions\ValidationException("Validation Error");
+});
+
+//Laravel juga menyediakan class Exception dengan error terkait dengan Http Status code, class exception tersebut adalah
+//Symfony\Component\HttpKernel\Exception\HttpException, di class ini kita hanya perlu menggunakan method abort(statusCode, optional message)
+//otomatis akan throw HttpStatusCode dengan code di param nya
+Route::prefix("/abort")->group([
+    Route::get("/400", function () {abort(400);}),
+    Route::get("/401", function () {abort(401);}),
+    Route::get("/500", function () {abort(500);})
+]);
+
+//jika kita ingin membuat error page sendiri kita tidak perlu meregistrasikan nya satu2, secara otomatis laravel akan
+//menggunakan view yang sesuai dengan status code nya, jika gunakan abort(400) maka laravel akan gunakan resource/views/errors/400.blade.php
+//jika tidak ada maka gunakan 4xx.blade.php jika tidak ada juga maka akan gunakan default Handler page, di template view nya
+//kita bisa gunakan object $exceptions untuk lihat error nya
+
+//php punya fitur yang namanya Maintanance Mode, ketika on setiap request akan mengembalikan httpcode 503, caranya
+//kita bisa gunaka php artisan down di console, secara otomatis akan muncul file di storage/framework/down, untuk mengehentikan
+//mode ini kita bisa gunakan command php artisan up, secara otomatis file tersebut akan dihapus
+
+//kadan ketika maintenance mode kita ingin mengakses app nya, kita perlu membuat secret key lalu command php artisan down --secret="secretKey"
+//lalu kita bisa mengakses aplikasi dengan http://contoh.com/secretKey, nanti otomatis akan dibuat cookie secretkey tersebut
+
 
 
 
